@@ -1,4 +1,5 @@
 import db from '../db/database.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // Get all licenses with owner info
 export const getLicenses = (req, res) => {
@@ -50,6 +51,7 @@ export const createLicense = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'License Added', `License: ${license_number}`, 'success');
     res.status(201).json({ license_id: this.lastID, ...req.body });
   });
 };
@@ -68,6 +70,7 @@ export const updateLicense = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'License Updated', `License: ${license_number}`, 'info');
     res.json({ message: "License updated successfully", ...req.body });
   });
 };
@@ -77,6 +80,7 @@ export const deleteLicense = (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM driving_licenses WHERE license_id = ?", [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
+    logActivity(req, 'License Deleted', `License ID: ${id}`, 'error');
     res.json({ message: "License record deleted" });
   });
 };

@@ -52,7 +52,7 @@ const OwnersManagement = () => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5000/api/owners${query ? `?search=${query}` : ''}`, {
+        fetch(`http://localhost:5100/api/owners${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -90,8 +90,8 @@ const OwnersManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentOwner 
-      ? `http://localhost:5000/api/owners/${currentOwner.owner_id}`
-      : 'http://localhost:5000/api/owners';
+      ? `http://localhost:5100/api/owners/${currentOwner.owner_id}`
+      : 'http://localhost:5100/api/owners';
     const method = currentOwner ? 'PUT' : 'POST';
 
     try {
@@ -119,7 +119,7 @@ const OwnersManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this owner record?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/owners/${id}`, {
+        const response = await fetch(`http://localhost:5100/api/owners/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

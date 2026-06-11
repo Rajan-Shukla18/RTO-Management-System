@@ -10,8 +10,15 @@ import licenseRoutes from './routes/licenseRoutes.js';
 import officeRoutes from './routes/officeRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +35,8 @@ app.use('/api/licenses', licenseRoutes);
 app.use('/api/offices', officeRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/activities', activityRoutes);
+app.use('/api/search', searchRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {

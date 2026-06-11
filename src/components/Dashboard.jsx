@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Dashboard = () => {
+const Dashboard = ({ setActiveTab }) => {
   const { role, userId } = useAuth();
   const [stats, setStats] = useState({
     counts: { owners: 0, vehicles: 0, registrations: 0, pending: 0, licenses: 0 },
@@ -48,7 +48,7 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/stats', { headers: getHeaders() });
+      const response = await fetch('http://localhost:5100/api/stats', { headers: getHeaders() });
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -58,7 +58,7 @@ const Dashboard = () => {
 
   const fetchAlerts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/alerts', { headers: getHeaders() });
+      const response = await fetch('http://localhost:5100/api/alerts', { headers: getHeaders() });
       const data = await response.json();
       setAlerts(data);
     } catch (error) {
@@ -67,17 +67,17 @@ const Dashboard = () => {
   };
 
   const adminStatCards = [
-    { label: 'Total Owners', value: stats.counts.owners, icon: Users, trend: '+12%', color: 'text-blue-500', bg: 'bg-blue-50' },
-    { label: 'Active Vehicles', value: stats.counts.vehicles, icon: Car, trend: '+5%', color: 'text-cyan-500', bg: 'bg-cyan-50' },
-    { label: 'Registrations', value: stats.counts.registrations, icon: FileText, trend: '+8%', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { label: 'Driving Licenses', value: stats.counts.licenses, icon: BadgeCheck, trend: '+2%', color: 'text-violet-500', bg: 'bg-violet-50' },
+    { label: 'Total Owners', value: stats.counts.owners, icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: 'Active Vehicles', value: stats.counts.vehicles, icon: Car, color: 'text-cyan-500', bg: 'bg-cyan-50' },
+    { label: 'Registrations', value: stats.counts.registrations, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    { label: 'Driving Licenses', value: stats.counts.licenses, icon: BadgeCheck, color: 'text-violet-500', bg: 'bg-violet-50' },
   ];
 
   const citizenStatCards = [
-    { label: 'My Vehicles', value: stats.counts.vehicles, icon: Car, trend: 'Active', color: 'text-cyan-500', bg: 'bg-cyan-50' },
-    { label: 'My Registrations', value: stats.counts.registrations, icon: FileText, trend: 'Active', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { label: 'Active Insurance', value: stats.counts.pending || 0, icon: ShieldCheck, trend: 'Valid', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: 'My Licenses', value: stats.counts.licenses, icon: BadgeCheck, trend: 'Valid', color: 'text-violet-500', bg: 'bg-violet-50' },
+    { label: 'My Vehicles', value: stats.counts.vehicles, icon: Car, color: 'text-cyan-500', bg: 'bg-cyan-50' },
+    { label: 'My Registrations', value: stats.counts.registrations, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    { label: 'Active Insurance', value: stats.counts.pending || 0, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    { label: 'My Licenses', value: stats.counts.licenses, icon: BadgeCheck, color: 'text-violet-500', bg: 'bg-violet-50' },
   ];
 
   const statCards = role === 'admin' ? adminStatCards : citizenStatCards;
@@ -119,10 +119,6 @@ const Dashboard = () => {
                 <div className={`p-3 rounded-2xl ${card.bg} ${card.color} transition-colors group-hover:bg-primary group-hover:text-white`}>
                   <card.icon size={24} />
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold text-success bg-success/10 px-2 py-1 rounded-lg">
-                  <TrendingUp size={12} />
-                  {card.trend}
-                </div>
               </div>
               <div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-wider">{card.label}</p>
@@ -145,7 +141,10 @@ const Dashboard = () => {
               )}
             </h3>
             {role === 'admin' && (
-              <button className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors">
+              <button 
+                onClick={() => setActiveTab && setActiveTab('activities')}
+                className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors cursor-pointer"
+              >
                 Full Activity Log <ArrowUpRight size={14} />
               </button>
             )}

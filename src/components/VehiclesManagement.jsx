@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const VehiclesManagement = () => {
+const VehiclesManagement = ({ onSelectVehicle }) => {
   const { role, userId } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [owners, setOwners] = useState([]);
@@ -57,7 +57,7 @@ const VehiclesManagement = () => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5000/api/vehicles${query ? `?search=${query}` : ''}`, {
+        fetch(`http://localhost:5100/api/vehicles${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -82,7 +82,7 @@ const VehiclesManagement = () => {
 
   const fetchOwners = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/owners');
+      const response = await fetch('http://localhost:5100/api/owners');
       const data = await response.json();
       setOwners(data);
     } catch (error) {
@@ -104,8 +104,8 @@ const VehiclesManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentVehicle 
-      ? `http://localhost:5000/api/vehicles/${currentVehicle.vehicle_id}`
-      : 'http://localhost:5000/api/vehicles';
+      ? `http://localhost:5100/api/vehicles/${currentVehicle.vehicle_id}`
+      : 'http://localhost:5100/api/vehicles';
     const method = currentVehicle ? 'PUT' : 'POST';
 
     try {
@@ -136,7 +136,7 @@ const VehiclesManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this vehicle record?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/vehicles/${id}`, {
+        const response = await fetch(`http://localhost:5100/api/vehicles/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) fetchVehicles(searchTerm);
@@ -292,7 +292,7 @@ const VehiclesManagement = () => {
                 </tr>
               ) : (
                 vehicles.map((vehicle) => (
-                  <tr key={vehicle.vehicle_id} className="group">
+                  <tr key={vehicle.vehicle_id} className="group cursor-pointer hover:bg-surface/10" onClick={() => onSelectVehicle && onSelectVehicle(vehicle)}>
                     <td>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-secondary border border-secondary/20">
@@ -334,7 +334,7 @@ const VehiclesManagement = () => {
                     </td>
                     {role === 'admin' && (
                       <td className="text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                           <button 
                             onClick={() => openEditModal(vehicle)}
                             className="p-2 hover:bg-primary/10 text-text-muted hover:text-primary rounded-lg transition-colors"

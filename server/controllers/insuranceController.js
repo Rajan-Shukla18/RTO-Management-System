@@ -1,4 +1,5 @@
 import db from '../db/database.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // Get all insurance records with vehicle and owner info
 export const getInsurance = (req, res) => {
@@ -52,6 +53,7 @@ export const createInsurance = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'Insurance Added', `Policy: ${policy_number}`, 'success');
     res.status(201).json({ insurance_id: this.lastID, ...req.body });
   });
 };
@@ -70,6 +72,7 @@ export const updateInsurance = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'Insurance Updated', `Policy: ${policy_number}`, 'info');
     res.json({ message: "Insurance updated successfully", ...req.body });
   });
 };
@@ -79,6 +82,7 @@ export const deleteInsurance = (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM insurance WHERE insurance_id = ?", [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
+    logActivity(req, 'Insurance Deleted', `Insurance ID: ${id}`, 'error');
     res.json({ message: "Insurance record deleted" });
   });
 };

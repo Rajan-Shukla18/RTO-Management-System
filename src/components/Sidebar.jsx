@@ -11,14 +11,15 @@ import {
   Bell, 
   LifeBuoy, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 import Logo from './Logo';
 
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
 
   const navItems = role === 'admin' 
     ? [
@@ -29,7 +30,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         { id: 'insurance', label: 'Insurance', icon: ShieldCheck },
         { id: 'licenses', label: 'Driving Licenses', icon: BadgeCheck },
         { id: 'offices', label: 'RTO Offices', icon: Building2 },
-        { id: 'alerts', label: 'System Alerts', icon: Bell },
+        { id: 'alerts', label: 'Compliance Center', icon: Bell },
+        { id: 'activities', label: 'Activity Center', icon: Activity },
       ]
     : [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
@@ -78,11 +80,21 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </nav>
 
       <div className="mt-auto px-4 pt-6 border-t border-border flex flex-col gap-1">
-        <button className="group flex items-center gap-3 px-4 py-2.5 text-text-muted hover:text-text-main hover:bg-background rounded-xl transition-all">
-          <LifeBuoy size={18} className="text-text-light group-hover:text-text-muted" />
+        <button 
+          onClick={() => setActiveTab('support')}
+          className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${
+            activeTab === 'support'
+              ? 'bg-primary-light text-primary font-semibold'
+              : 'text-text-muted hover:text-text-main hover:bg-background'
+          }`}
+        >
+          <LifeBuoy size={18} className={activeTab === 'support' ? 'text-primary' : 'text-text-light group-hover:text-text-muted'} />
           <span className="text-[14px]">Support</span>
         </button>
-        <button className="group flex items-center gap-3 px-4 py-2.5 text-error/80 hover:text-error hover:bg-red-50 rounded-xl transition-all">
+        <button 
+          onClick={logout}
+          className="group flex items-center gap-3 px-4 py-2.5 text-error/80 hover:text-error hover:bg-red-50 rounded-xl transition-all"
+        >
           <LogOut size={18} className="opacity-70 group-hover:opacity-100" />
           <span className="text-[14px]">Logout</span>
         </button>

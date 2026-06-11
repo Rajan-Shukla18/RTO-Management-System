@@ -1,4 +1,5 @@
 import db from '../db/database.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // Get all registrations with vehicle and owner info
 export const getRegistrations = (req, res) => {
@@ -51,6 +52,7 @@ export const createRegistration = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'Registration Requested', `Vehicle ID: ${vehicle_id}`, 'info');
     res.status(201).json({ registration_id: this.lastID, status: 'Pending' });
   });
 };
@@ -70,11 +72,13 @@ export const updateStatus = (req, res) => {
     
     db.run("UPDATE registrations SET status = ?, registration_no = ? WHERE registration_id = ?", [status, plateNo, id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
+      logActivity(req, 'Registration Approved', `Registration No: ${plateNo}`, 'success');
       res.json({ message: "Registration approved", registration_no: plateNo });
     });
   } else {
     db.run("UPDATE registrations SET status = ? WHERE registration_id = ?", [status, id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
+      logActivity(req, `Registration ${status}`, `Registration ID: ${id}`, status === 'Rejected' ? 'error' : 'info');
       res.json({ message: `Registration ${status.toLowerCase()}` });
     });
   }
@@ -85,6 +89,7 @@ export const deleteRegistration = (req, res) => {
   const { id } = req.params;
   db.run("DELETE FROM registrations WHERE registration_id = ?", [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
+    logActivity(req, 'Registration Deleted', `Registration ID: ${id}`, 'error');
     res.json({ message: "Registration deleted" });
   });
 };

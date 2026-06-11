@@ -10,12 +10,18 @@ import InsuranceManagement from './components/InsuranceManagement';
 import LicenseManagement from './components/LicenseManagement';
 import OfficeManagement from './components/OfficeManagement';
 import AlertsManagement from './components/AlertsManagement';
+import ActivityCenter from './components/ActivityCenter';
+import GlobalSearch from './components/GlobalSearch';
 import SplashScreen from './components/SplashScreen';
+import VehicleProfile from './components/VehicleProfile';
+import SupportCenter from './components/SupportCenter';
+import Login from './components/auth/Login';
 import { useAuth } from './context/AuthContext';
 
 function App() {
-  const { role, setRole } = useAuth();
+  const { role, isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   React.useEffect(() => {
@@ -26,10 +32,17 @@ function App() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   return (
-    <SplashScreen>
-      <div className="flex min-h-screen bg-background text-text-main font-sans">
-        {/* Mobile Sidebar Overlay */}
+    <div className="flex min-h-screen bg-background text-text-main font-sans">
+      {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {isSidebarOpen && (
             <motion.div 
@@ -61,7 +74,7 @@ function App() {
         <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
           {/* Top Bar - Modern & Clean */}
           <header className="h-16 flex items-center justify-between px-4 md:px-8 bg-surface border-b border-border sticky top-0 z-30">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <button onClick={toggleSidebar} className="lg:hidden p-2 hover:bg-background rounded-lg transition-colors">
                 <Menu size={20} />
               </button>
@@ -69,6 +82,7 @@ function App() {
                 {role === 'admin' ? activeTab.replace('-', ' ') : `My ${activeTab.replace('-', ' ')}`}
               </h1>
             </div>
+            <GlobalSearch setActiveTab={setActiveTab} />
 
             <div className="flex items-center gap-2 md:gap-6">
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-success/5 border border-success/10 rounded-full">
@@ -88,15 +102,6 @@ function App() {
               </button>
               <div className="h-8 w-[1px] bg-border mx-1"></div>
               
-              {/* Role Toggle Switch */}
-              <button 
-                onClick={() => setRole(role === 'admin' ? 'user' : 'admin')}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-full hover:bg-primary/10 transition-colors"
-                title="Toggle simulated role"
-              >
-                <span className="text-[10px] font-bold text-primary uppercase tracking-widest">View: {role}</span>
-              </button>
-
               <div className="flex items-center gap-3 pl-1">
                 <div className="hidden md:block text-right">
                   <p className="text-sm font-semibold leading-none capitalize">{role === 'admin' ? 'Admin User' : 'Rajan Shukla'}</p>
@@ -119,19 +124,32 @@ function App() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {activeTab === 'dashboard' && <Dashboard />}
-                  {activeTab === 'owners' && <OwnersManagement />}
-                  {activeTab === 'vehicles' && <VehiclesManagement />}
-                  {activeTab === 'registrations' && <RegistrationManagement />}
-                  {activeTab === 'insurance' && <InsuranceManagement />}
-                  {activeTab === 'licenses' && <LicenseManagement />}
-                  {activeTab === 'offices' && <OfficeManagement />}
-                  {activeTab === 'alerts' && <AlertsManagement />}
+      {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
+      {activeTab === 'owners' && <OwnersManagement />}
+      {activeTab === 'vehicles' && (
+        <VehiclesManagement
+          onSelectVehicle={(vehicle) => {
+            setSelectedVehicle(vehicle);
+            setActiveTab('vehicle-profile');
+          }}
+        />
+      )}
+      {activeTab === 'registrations' && <RegistrationManagement />}
+      {activeTab === 'insurance' && <InsuranceManagement />}
+      {activeTab === 'licenses' && <LicenseManagement />}
+      {activeTab === 'offices' && <OfficeManagement />}
+      {activeTab === 'alerts' && <AlertsManagement />}
+      {activeTab === 'activities' && <ActivityCenter />}
+      {activeTab === 'support' && <SupportCenter />}
+      {activeTab === 'vehicle-profile' && selectedVehicle && (
+        <VehicleProfile vehicle={selectedVehicle} onBack={() => setActiveTab('vehicles')} />
+      )}
+      {/* Fallback for undeveloped modules */}
                 </motion.div>
               </AnimatePresence>
               
               {/* Fallback for undeveloped modules */}
-              {!['dashboard', 'owners', 'vehicles', 'registrations', 'insurance', 'licenses', 'offices', 'alerts'].includes(activeTab) && (
+              {!['dashboard', 'owners', 'vehicles', 'registrations', 'insurance', 'licenses', 'offices', 'alerts', 'activities'].includes(activeTab) && (
                 <div className="flex flex-col items-center justify-center h-[50vh] text-text-muted">
                   <h2 className="text-xl font-semibold mb-2">Section Under Development</h2>
                   <p className="text-sm">We are working on bringing the {activeTab} module live.</p>
@@ -141,7 +159,6 @@ function App() {
           </main>
         </div>
       </div>
-    </SplashScreen>
   );
 }
 

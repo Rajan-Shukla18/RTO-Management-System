@@ -1,4 +1,5 @@
 import db from '../db/database.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // Get all vehicles with owner information
 export const getVehicles = (req, res) => {
@@ -59,6 +60,7 @@ export const createVehicle = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'Vehicle Added', `Chassis: ${chassis_number}`, 'success');
     res.status(201).json({ vehicle_id: this.lastID, ...req.body });
   });
 };
@@ -87,6 +89,7 @@ export const updateVehicle = (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: "Vehicle not found" });
     }
+    logActivity(req, 'Vehicle Updated', `Chassis: ${chassis_number}`, 'info');
     res.json({ message: "Vehicle updated successfully", ...req.body });
   });
 };
@@ -102,6 +105,7 @@ export const deleteVehicle = (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: "Vehicle not found" });
     }
+    logActivity(req, 'Vehicle Deleted', `Vehicle ID: ${id}`, 'error');
     res.json({ message: "Vehicle deleted successfully" });
   });
 };

@@ -3,10 +3,15 @@ import db from '../db/database.js';
 export const getAlerts = (req, res) => {
   const alerts = [];
   const today = new Date().toISOString().split('T')[0];
-  const nextMonth = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
+  const nextMonthDate = new Date(new Date().setDate(new Date().getDate() + 30));
+  const nextMonth = nextMonthDate.toISOString().split('T')[0];
 
   const role = req.headers['x-user-role'] || 'admin';
   const userId = req.headers['x-user-id'] || '1';
+
+  const calculateDaysRemaining = (expiryStr) => {
+    return Math.ceil((new Date(expiryStr) - new Date(today)) / (1000 * 60 * 60 * 24));
+  };
 
   let insuranceQuery = `
     SELECT i.*, v.manufacturer, v.model_name 
@@ -15,23 +20,30 @@ export const getAlerts = (req, res) => {
     JOIN owners o ON v.owner_id = o.owner_id
     WHERE i.expiry_date <= ?
   `;
-  let insuranceParams = [today];
+  let insuranceParams = [nextMonth];
 
   if (role === 'user') {
     insuranceQuery += " AND o.user_id = ?";
     insuranceParams.push(userId);
   }
 
-  db.all(insuranceQuery, insuranceParams, (err, expiredInsurance) => {
+  db.all(insuranceQuery, insuranceParams, (err, insuranceRecords) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    expiredInsurance.forEach(item => {
+    insuranceRecords.forEach(item => {
+      const daysRemaining = calculateDaysRemaining(item.expiry_date);
+      const isExpired = daysRemaining < 0;
+      
       alerts.push({
         id: `ins-exp-${item.insurance_id}`,
-        type: 'error',
-        title: 'Insurance Expired',
-        description: `Policy ${item.policy_number} for ${item.manufacturer} ${item.model_name} has expired on ${item.expiry_date}.`,
-        category: 'Insurance'
+        type: isExpired ? 'error' : 'warning',
+        priority: isExpired ? 'High' : 'Medium',
+        title: isExpired ? 'Insurance Expired' : 'Insurance Expiring Soon',
+        description: `Policy ${item.policy_number} for ${item.manufacturer} ${item.model_name} ${isExpired ? 'expired' : 'expires'} on ${item.expiry_date}.`,
+        category: 'Insurance',
+        alertType: 'Insurance',
+        daysRemaining: daysRemaining,
+        action: 'Renew Insurance immediately'
       });
     });
 
@@ -53,13 +65,19 @@ export const getAlerts = (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
 
         licenses.forEach(lic => {
-          const isExpired = new Date(lic.expiry_date) <= new Date(today);
+          const daysRemaining = calculateDaysRemaining(lic.expiry_date);
+          const isExpired = daysRemaining < 0;
+          
           alerts.push({
             id: `lic-${lic.license_id}`,
             type: isExpired ? 'error' : 'warning',
+            priority: isExpired ? 'High' : 'Medium',
             title: isExpired ? 'License Expired' : 'License Renewal Due',
             description: `${lic.full_name}'s license (${lic.license_number}) ${isExpired ? 'expired' : 'expires'} on ${lic.expiry_date}.`,
-            category: 'License'
+            category: 'License',
+            alertType: 'License',
+            daysRemaining: daysRemaining,
+            action: 'Apply for License Renewal'
           });
         });
 
@@ -77,9 +95,13 @@ export const getAlerts = (req, res) => {
           alerts.push({
             id: 'reg-pending',
             type: 'warning',
+            priority: 'Medium',
             title: 'Pending Approvals',
             description: `There are ${pending.count} registration applications awaiting review.`,
-            category: 'Registration'
+            category: 'Registration',
+            alertType: 'Registration',
+            daysRemaining: 0,
+            action: 'Review pending applications'
           });
         }
         finishAlerts();

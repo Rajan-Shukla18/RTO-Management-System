@@ -100,6 +100,16 @@ const createTables = () => {
       jurisdiction_area TEXT
     )`);
 
+    // Activities table
+    db.run(`CREATE TABLE IF NOT EXISTS activities (
+      activity_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      related_entity TEXT,
+      performed_by TEXT,
+      status TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     console.log("Database schema synchronized.");
     seedData();
   });

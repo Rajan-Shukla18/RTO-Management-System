@@ -1,4 +1,5 @@
 import db from '../db/database.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // Get all owners with search functionality
 export const getOwners = (req, res) => {
@@ -45,6 +46,7 @@ export const createOwner = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+    logActivity(req, 'Owner Added', `Name: ${full_name}`, 'success');
     res.status(201).json({ owner_id: this.lastID, ...req.body });
   });
 };
@@ -66,6 +68,7 @@ export const updateOwner = (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: "Owner not found" });
     }
+    logActivity(req, 'Owner Updated', `Name: ${full_name}`, 'info');
     res.json({ message: "Owner updated successfully", ...req.body });
   });
 };
@@ -81,6 +84,7 @@ export const deleteOwner = (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: "Owner not found" });
     }
+    logActivity(req, 'Owner Deleted', `Owner ID: ${id}`, 'error');
     res.json({ message: "Owner deleted successfully" });
   });
 };
