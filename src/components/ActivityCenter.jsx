@@ -60,7 +60,7 @@ const ActivityCenter = () => {
       
       setError(null);
       
-      const fetchPromise = fetch('http://localhost:5100/api/activities');
+      const fetchPromise = fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/activities`);
       const [response] = mode !== 'SILENT' 
         ? await Promise.all([fetchPromise, new Promise(resolve => setTimeout(resolve, 800))])
         : await Promise.all([fetchPromise]);

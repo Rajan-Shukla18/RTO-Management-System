@@ -50,7 +50,7 @@ const OfficeManagement = () => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5100/api/offices${query ? `?search=${query}` : ''}`),
+        fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/offices${query ? `?search=${query}` : ''}`),
         new Promise(resolve => setTimeout(resolve, 800))
       ]);
       if (!response.ok) throw new Error('Database connection failed');
@@ -82,8 +82,8 @@ const OfficeManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentOffice 
-      ? `http://localhost:5100/api/offices/${currentOffice.office_id}`
-      : 'http://localhost:5100/api/offices';
+      ? `${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/offices/${currentOffice.office_id}`
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/offices`;
     const method = currentOffice ? 'PUT' : 'POST';
 
     try {
@@ -113,7 +113,7 @@ const OfficeManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Remove this RTO office from the regional network?')) {
       try {
-        const response = await fetch(`http://localhost:5100/api/offices/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/offices/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) fetchOffices(searchTerm);

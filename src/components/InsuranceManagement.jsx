@@ -53,7 +53,7 @@ const InsuranceManagement = () => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5100/api/insurance${query ? `?search=${query}` : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/insurance${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -78,7 +78,7 @@ const InsuranceManagement = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/vehicles', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/vehicles`, {
         headers: {
           'x-user-role': role,
           'x-user-id': userId.toString()
@@ -105,8 +105,8 @@ const InsuranceManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentPolicy 
-      ? `http://localhost:5100/api/insurance/${currentPolicy.insurance_id}`
-      : 'http://localhost:5100/api/insurance';
+      ? `${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/insurance/${currentPolicy.insurance_id}`
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/insurance`;
     const method = currentPolicy ? 'PUT' : 'POST';
 
     try {
@@ -138,7 +138,7 @@ const InsuranceManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Remove this insurance policy from records?')) {
       try {
-        const response = await fetch(`http://localhost:5100/api/insurance/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/insurance/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) fetchInsurance(searchTerm);

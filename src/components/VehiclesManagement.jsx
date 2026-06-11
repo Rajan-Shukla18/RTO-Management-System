@@ -57,7 +57,7 @@ const VehiclesManagement = ({ onSelectVehicle }) => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5100/api/vehicles${query ? `?search=${query}` : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/vehicles${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -82,7 +82,7 @@ const VehiclesManagement = ({ onSelectVehicle }) => {
 
   const fetchOwners = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/owners');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/owners`);
       const data = await response.json();
       setOwners(data);
     } catch (error) {
@@ -104,8 +104,8 @@ const VehiclesManagement = ({ onSelectVehicle }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentVehicle 
-      ? `http://localhost:5100/api/vehicles/${currentVehicle.vehicle_id}`
-      : 'http://localhost:5100/api/vehicles';
+      ? `${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/vehicles/${currentVehicle.vehicle_id}`
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/vehicles`;
     const method = currentVehicle ? 'PUT' : 'POST';
 
     try {
@@ -136,7 +136,7 @@ const VehiclesManagement = ({ onSelectVehicle }) => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this vehicle record?')) {
       try {
-        const response = await fetch(`http://localhost:5100/api/vehicles/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/vehicles/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) fetchVehicles(searchTerm);

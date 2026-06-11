@@ -48,7 +48,7 @@ const Dashboard = ({ setActiveTab }) => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/stats', { headers: getHeaders() });
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/stats`, { headers: getHeaders() });
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -58,7 +58,7 @@ const Dashboard = ({ setActiveTab }) => {
 
   const fetchAlerts = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/alerts', { headers: getHeaders() });
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/alerts`, { headers: getHeaders() });
       const data = await response.json();
       setAlerts(data);
     } catch (error) {

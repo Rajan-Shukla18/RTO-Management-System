@@ -29,32 +29,32 @@ export default function VehicleProfile({ vehicle, onBack }) {
       try {
         // Owner – vehicle has owner_id
         if (vehicle.owner_id) {
-          const res = await fetch(`http://localhost:5100/api/owners/${vehicle.owner_id}`);
+          const res = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/owners/${vehicle.owner_id}`);
           if (res.ok) setOwner(await res.json());
         }
         // Registration
-        const regRes = await fetch(`http://localhost:5100/api/registrations?vehicle_id=${vehicle.vehicle_id}`);
+        const regRes = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/registrations?vehicle_id=${vehicle.vehicle_id}`);
         if (regRes.ok) {
           const regs = await regRes.json();
           setRegistration(regs[0] || null);
         }
         // Insurance
-        const insRes = await fetch(`http://localhost:5100/api/insurance?vehicle_id=${vehicle.vehicle_id}`);
+        const insRes = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/insurance?vehicle_id=${vehicle.vehicle_id}`);
         if (insRes.ok) {
           const ins = await insRes.json();
           setInsurance(ins[0] || null);
         }
         // License
-        const licRes = await fetch(`http://localhost:5100/api/licenses?vehicle_id=${vehicle.vehicle_id}`);
+        const licRes = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/licenses?vehicle_id=${vehicle.vehicle_id}`);
         if (licRes.ok) {
           const lic = await licRes.json();
           setLicense(lic[0] || null);
         }
         // Alerts (compliance)
-        const alRes = await fetch(`http://localhost:5100/api/alerts?vehicle_id=${vehicle.vehicle_id}`);
+        const alRes = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/alerts?vehicle_id=${vehicle.vehicle_id}`);
         if (alRes.ok) setAlerts(await alRes.json());
         // Activity history
-        const actRes = await fetch(`http://localhost:5100/api/activities?vehicle_id=${vehicle.vehicle_id}`);
+        const actRes = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/activities?vehicle_id=${vehicle.vehicle_id}`);
         if (actRes.ok) setActivities(await actRes.json());
       } catch (e) {
         console.error('Failed to load vehicle details', e);

@@ -31,7 +31,7 @@ const GlobalSearch = ({ setActiveTab }) => {
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5100/api/search?q=${encodeURIComponent(searchQuery)}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/search?q=${encodeURIComponent(searchQuery)}`, {
         headers: {
           'x-user-role': role,
           'x-user-id': userId.toString()

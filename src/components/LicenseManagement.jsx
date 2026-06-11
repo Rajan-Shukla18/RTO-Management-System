@@ -56,7 +56,7 @@ const LicenseManagement = () => {
       setLoading(true);
       setError(null);
       const [response] = await Promise.all([
-        fetch(`http://localhost:5100/api/licenses${query ? `?search=${query}` : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/licenses${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -81,7 +81,7 @@ const LicenseManagement = () => {
 
   const fetchOwners = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/owners', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/owners`, {
         headers: {
           'x-user-role': role,
           'x-user-id': userId.toString()
@@ -108,8 +108,8 @@ const LicenseManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = currentLicense 
-      ? `http://localhost:5100/api/licenses/${currentLicense.license_id}`
-      : 'http://localhost:5100/api/licenses';
+      ? `${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/licenses/${currentLicense.license_id}`
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/licenses`;
     const method = currentLicense ? 'PUT' : 'POST';
 
     try {
@@ -141,7 +141,7 @@ const LicenseManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this license record?')) {
       try {
-        const response = await fetch(`http://localhost:5100/api/licenses/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/licenses/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) fetchLicenses(searchTerm);

@@ -60,7 +60,7 @@ const RegistrationManagement = () => {
       // Added artificial delay to make the "Fetching from Database" indicator visible
       // since local SQLite is extremely fast.
       const [response] = await Promise.all([
-        fetch(`http://localhost:5100/api/registrations${query ? `?search=${query}` : ''}`, {
+        fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/registrations${query ? `?search=${query}` : ''}`, {
           headers: {
             'x-user-role': role,
             'x-user-id': userId.toString()
@@ -86,7 +86,7 @@ const RegistrationManagement = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('http://localhost:5100/api/vehicles', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/vehicles`, {
         headers: {
           'x-user-role': role,
           'x-user-id': userId.toString()
@@ -101,7 +101,7 @@ const RegistrationManagement = () => {
 
   const handleStatusUpdate = async (id, status) => {
     try {
-      const response = await fetch(`http://localhost:5100/api/registrations/${id}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/registrations/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -115,7 +115,7 @@ const RegistrationManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5100/api/registrations', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5100'}/api/registrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -328,7 +328,7 @@ const RegistrationManagement = () => {
                           <button 
                             onClick={async () => {
                               if(window.confirm('Delete registration record?')) {
-                                await fetch(`http://localhost:5100/api/registrations/${reg.registration_id}`, { method: 'DELETE' });
+                                await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/registrations/${reg.registration_id}`, { method: 'DELETE' });
                                 fetchRegistrations(searchTerm);
                               }
                             }}

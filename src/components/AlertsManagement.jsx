@@ -60,7 +60,7 @@ const AlertsManagement = () => {
       }
       setError(null);
       
-      const fetchPromise = fetch(`http://localhost:5100/api/alerts`, { headers: getHeaders() });
+      const fetchPromise = fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5100'}`}/api/alerts`, { headers: getHeaders() });
       const [response] = mode !== 'SILENT' 
         ? await Promise.all([fetchPromise, new Promise(resolve => setTimeout(resolve, 800))])
         : await Promise.all([fetchPromise]);
