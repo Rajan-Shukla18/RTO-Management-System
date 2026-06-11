@@ -97,7 +97,9 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--surface);
   border-radius: 16px;
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
