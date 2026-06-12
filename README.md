@@ -1,16 +1,74 @@
-# React + Vite
+# Vehix | Smart RTO Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![React](https://img.shields.io/badge/React-19.x-61DAFB.svg?logo=react)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg?logo=tailwind-css)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-339933.svg?logo=node.js)
+![Express.js](https://img.shields.io/badge/Express.js-5.x-000000.svg?logo=express)
 
-Currently, two official plugins are available:
+**Vehix** is an advanced, real-time Regional Transport Office (RTO) Management System built to handle modern vehicle registration, compliance alerts, and administrative activity tracking. This project was designed with a focus on high performance, enterprise-grade UX/UI, and real-time data synchronization.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+🔗 **[Live Demo on Vercel](https://rto-management-system-five.vercel.app)**
 
-## React Compiler
+## 🚀 Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Real-time Activity Center:** A dynamic audit log that continuously polls for system updates, complete with export capabilities (Native Excel `.xlsx` generation).
+*   **Compliance Alerts Engine:** Automated monitoring of expired insurances, suspended licenses, and registration renewals with a dedicated management interface.
+*   **Dual-Role Authentication:** Secure access portal supporting both **Admin (RTO Official)** and **Citizen** roles, complete with session persistence and protected routes.
+*   **Advanced Dashboard Analytics:** Comprehensive statistical overview of all vehicles, owners, and active compliance metrics.
+*   **Responsive & Animated UI:** Built with Tailwind CSS and Framer Motion for a fluid, professional user experience across all devices.
 
-## Expanding the ESLint configuration
+## 🛠️ Technology Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Frontend:**
+*   **React 19** - UI Library
+*   **Vite** - Build Tool & Development Server
+*   **Tailwind CSS** - Utility-first styling
+*   **Framer Motion** - Fluid animations & transitions
+*   **Lucide React** - Modern iconography
+
+**Backend:**
+*   **Node.js & Express.js** - Robust REST API architecture
+*   **SQLite3** - Lightweight, embedded relational database
+*   **CORS & Dotenv** - Security and environment configuration
+
+## 📦 Local Installation & Setup
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Rajan-Shukla18/RTO-Management-System.git
+    cd RTO-Management-System
+    ```
+
+2.  **Install all dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Start the development environment:**
+    This project uses `concurrently` to run both the Vite frontend and the Express backend simultaneously.
+    ```bash
+    npm run dev:all
+    ```
+
+4.  **Access the application:**
+    Open `http://localhost:5173` in your browser.
+
+## 🔑 Demo Credentials
+
+To explore the system, use the following credentials on the Login Portal:
+
+*   **Admin Access:**
+    *   Username: `admin`
+    *   Password: `admin123`
+*   **Citizen Access:**
+    *   Username: `rajan`
+    *   Password: `rajan123`
+
+## ☁️ Deployment Architecture
+
+*   **Frontend:** Deployed globally via **Vercel** for optimal edge caching and fast delivery.
+*   **Backend:** Hosted on **Render** (Node.js runtime) providing a robust, constantly available REST API.
+
+---
+*Designed and developed as a comprehensive Database Management System (DBMS) project.*

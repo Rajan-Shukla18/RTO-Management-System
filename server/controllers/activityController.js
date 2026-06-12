@@ -1,12 +1,19 @@
-import db from '../db/database.js';
+import supabase from '../db/supabase.js';
 
-export const getActivities = (req, res) => {
-  const query = "SELECT * FROM activities ORDER BY timestamp DESC LIMIT 50";
-  
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+export const getActivities = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
     }
-    res.json(rows);
-  });
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching activities:', err);
+    res.status(500).json({ error: err.message });
+  }
 };

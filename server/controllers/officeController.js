@@ -1,69 +1,82 @@
-import db from '../db/database.js';
+import supabase from '../db/supabase.js';
 
 // Get all RTO offices
-export const getOffices = (req, res) => {
-  const { search } = req.query;
-  let query = "SELECT * FROM rto_offices";
-  let params = [];
+export const getOffices = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = supabase.from('rto_offices').select('*');
 
-  if (search) {
-    query += " WHERE office_code LIKE ? OR office_name LIKE ? OR city LIKE ?";
-    const searchParam = `%${search}%`;
-    params = [searchParam, searchParam, searchParam];
-  }
-
-  query += " ORDER BY office_code ASC";
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+    if (search) {
+      query = query.or(`office_code.ilike.%${search}%,office_name.ilike.%${search}%,city.ilike.%${search}%`);
     }
-    res.json(rows);
-  });
+
+    query = query.order('office_code', { ascending: true });
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching offices:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Add new RTO office
-export const createOffice = (req, res) => {
+export const createOffice = async (req, res) => {
   const { office_code, office_name, city, address, contact_no, jurisdiction_area } = req.body;
 
   if (!office_code || !office_name || !city) {
     return res.status(400).json({ error: "Office Code, Name, and City are required." });
   }
 
-  const query = `INSERT INTO rto_offices (office_code, office_name, city, address, contact_no, jurisdiction_area) 
-                 VALUES (?, ?, ?, ?, ?, ?)`;
-  
-  db.run(query, [office_code, office_name, city, address, contact_no, jurisdiction_area], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.status(201).json({ office_id: this.lastID, ...req.body });
-  });
+  try {
+    const { data, error } = await supabase
+      .from('rto_offices')
+      .insert([{ office_code, office_name, city, address, contact_no, jurisdiction_area }])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error creating office:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Update RTO office
-export const updateOffice = (req, res) => {
+export const updateOffice = async (req, res) => {
   const { id } = req.params;
   const { office_code, office_name, city, address, contact_no, jurisdiction_area } = req.body;
 
-  const query = `UPDATE rto_offices SET 
-                 office_code = ?, office_name = ?, city = ?, 
-                 address = ?, contact_no = ?, jurisdiction_area = ? 
-                 WHERE office_id = ?`;
+  try {
+    const { data, error } = await supabase
+      .from('rto_offices')
+      .update({ office_code, office_name, city, address, contact_no, jurisdiction_area })
+      .eq('office_id', id)
+      .select();
 
-  db.run(query, [office_code, office_name, city, address, contact_no, jurisdiction_area, id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ message: "Office updated successfully", ...req.body });
-  });
+  } catch (err) {
+    console.error('Error updating office:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Delete RTO office
-export const deleteOffice = (req, res) => {
+export const deleteOffice = async (req, res) => {
   const { id } = req.params;
-  db.run("DELETE FROM rto_offices WHERE office_id = ?", [id], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const { error } = await supabase
+      .from('rto_offices')
+      .delete()
+      .eq('office_id', id);
+
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ message: "Office deleted successfully" });
-  });
+  } catch (err) {
+    console.error('Error deleting office:', err);
+    res.status(500).json({ error: err.message });
+  }
 };

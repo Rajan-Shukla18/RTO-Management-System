@@ -1,88 +1,115 @@
-import db from '../db/database.js';
+import supabase from '../db/supabase.js';
 import { logActivity } from '../utils/activityLogger.js';
 
 // Get all insurance records with vehicle and owner info
-export const getInsurance = (req, res) => {
-  const { search } = req.query;
-  const role = req.headers['x-user-role'] || 'admin';
-  const userId = req.headers['x-user-id'] || '1';
+export const getInsurance = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const role = req.headers['x-user-role'] || 'admin';
+    const userId = req.headers['x-user-id'] || '1';
 
-  let query = `
-    SELECT i.*, v.manufacturer, v.model_name, r.registration_no, o.full_name as owner_name 
-    FROM insurance i
-    JOIN vehicles v ON i.vehicle_id = v.vehicle_id
-    LEFT JOIN registrations r ON v.vehicle_id = r.vehicle_id
-    JOIN owners o ON v.owner_id = o.owner_id
-    WHERE 1=1
-  `;
-  let params = [];
+    let query = supabase
+      .from('insurance')
+      .select(`
+        *,
+        vehicles (
+          manufacturer, model_name, owner_id,
+          owners ( full_name, user_id ),
+          registrations ( registration_no )
+        )
+      `)
+      .order('expiry_date', { ascending: true });
 
-  if (role === 'user') {
-    query += " AND o.user_id = ?";
-    params.push(userId);
-  }
-
-  if (search) {
-    query += " AND (i.policy_number LIKE ? OR i.provider_name LIKE ? OR r.registration_no LIKE ?)";
-    const searchParam = `%${search}%`;
-    params.push(searchParam, searchParam, searchParam);
-  }
-
-  query += " ORDER BY i.expiry_date ASC";
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+    if (search) {
+      query = query.or(`policy_number.ilike.%${search}%,provider_name.ilike.%${search}%`);
     }
-    res.json(rows);
-  });
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Flatten to match old SQLite JOIN format
+    const formatted = (data || [])
+      .filter(i => {
+        if (role === 'user') {
+          return i.vehicles?.owners?.user_id?.toString() === userId.toString();
+        }
+        return true;
+      })
+      .map(i => ({
+        ...i,
+        manufacturer: i.vehicles?.manufacturer || null,
+        model_name: i.vehicles?.model_name || null,
+        registration_no: i.vehicles?.registrations?.[0]?.registration_no || null,
+        owner_name: i.vehicles?.owners?.full_name || null,
+        vehicles: undefined
+      }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('Error fetching insurance:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Add new insurance policy
-export const createInsurance = (req, res) => {
+export const createInsurance = async (req, res) => {
   const { vehicle_id, provider_name, policy_number, start_date, expiry_date, premium_amount } = req.body;
 
   if (!vehicle_id || !policy_number || !provider_name) {
     return res.status(400).json({ error: "Vehicle, Policy Number, and Provider are required." });
   }
 
-  const query = `INSERT INTO insurance (vehicle_id, provider_name, policy_number, start_date, expiry_date, premium_amount) 
-                 VALUES (?, ?, ?, ?, ?, ?)`;
-  
-  db.run(query, [vehicle_id, provider_name, policy_number, start_date, expiry_date, premium_amount], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    const { data, error } = await supabase
+      .from('insurance')
+      .insert([{ vehicle_id, provider_name, policy_number, start_date, expiry_date, premium_amount }])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
     logActivity(req, 'Insurance Added', `Policy: ${policy_number}`, 'success');
-    res.status(201).json({ insurance_id: this.lastID, ...req.body });
-  });
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error creating insurance:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Update insurance policy
-export const updateInsurance = (req, res) => {
+export const updateInsurance = async (req, res) => {
   const { id } = req.params;
   const { provider_name, policy_number, start_date, expiry_date, premium_amount } = req.body;
 
-  const query = `UPDATE insurance SET 
-                 provider_name = ?, policy_number = ?, start_date = ?, 
-                 expiry_date = ?, premium_amount = ? 
-                 WHERE insurance_id = ?`;
+  try {
+    const { data, error } = await supabase
+      .from('insurance')
+      .update({ provider_name, policy_number, start_date, expiry_date, premium_amount })
+      .eq('insurance_id', id)
+      .select();
 
-  db.run(query, [provider_name, policy_number, start_date, expiry_date, premium_amount, id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+    if (error) return res.status(500).json({ error: error.message });
     logActivity(req, 'Insurance Updated', `Policy: ${policy_number}`, 'info');
     res.json({ message: "Insurance updated successfully", ...req.body });
-  });
+  } catch (err) {
+    console.error('Error updating insurance:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Delete insurance record
-export const deleteInsurance = (req, res) => {
+export const deleteInsurance = async (req, res) => {
   const { id } = req.params;
-  db.run("DELETE FROM insurance WHERE insurance_id = ?", [id], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const { error } = await supabase
+      .from('insurance')
+      .delete()
+      .eq('insurance_id', id);
+
+    if (error) return res.status(500).json({ error: error.message });
     logActivity(req, 'Insurance Deleted', `Insurance ID: ${id}`, 'error');
     res.json({ message: "Insurance record deleted" });
-  });
+  } catch (err) {
+    console.error('Error deleting insurance:', err);
+    res.status(500).json({ error: err.message });
+  }
 };

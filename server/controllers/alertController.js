@@ -1,36 +1,37 @@
-import db from '../db/database.js';
+import supabase from '../db/supabase.js';
 
-export const getAlerts = (req, res) => {
-  const alerts = [];
-  const today = new Date().toISOString().split('T')[0];
-  const nextMonthDate = new Date(new Date().setDate(new Date().getDate() + 30));
-  const nextMonth = nextMonthDate.toISOString().split('T')[0];
+export const getAlerts = async (req, res) => {
+  try {
+    const alerts = [];
+    const today = new Date().toISOString().split('T')[0];
+    const nextMonthDate = new Date(new Date().setDate(new Date().getDate() + 30));
+    const nextMonth = nextMonthDate.toISOString().split('T')[0];
 
-  const role = req.headers['x-user-role'] || 'admin';
-  const userId = req.headers['x-user-id'] || '1';
+    const role = req.headers['x-user-role'] || 'admin';
+    const userId = req.headers['x-user-id'] || '1';
 
-  const calculateDaysRemaining = (expiryStr) => {
-    return Math.ceil((new Date(expiryStr) - new Date(today)) / (1000 * 60 * 60 * 24));
-  };
+    const calculateDaysRemaining = (expiryStr) => {
+      return Math.ceil((new Date(expiryStr) - new Date(today)) / (1000 * 60 * 60 * 24));
+    };
 
-  let insuranceQuery = `
-    SELECT i.*, v.manufacturer, v.model_name 
-    FROM insurance i
-    JOIN vehicles v ON i.vehicle_id = v.vehicle_id
-    JOIN owners o ON v.owner_id = o.owner_id
-    WHERE i.expiry_date <= ?
-  `;
-  let insuranceParams = [nextMonth];
+    // 1. Check Insurance Expiries
+    const { data: insuranceRecords, error: insError } = await supabase
+      .from('insurance')
+      .select(`
+        *,
+        vehicles (
+          manufacturer, model_name, owner_id,
+          owners ( user_id )
+        )
+      `)
+      .lte('expiry_date', nextMonth);
 
-  if (role === 'user') {
-    insuranceQuery += " AND o.user_id = ?";
-    insuranceParams.push(userId);
-  }
+    if (insError) return res.status(500).json({ error: insError.message });
 
-  db.all(insuranceQuery, insuranceParams, (err, insuranceRecords) => {
-    if (err) return res.status(500).json({ error: err.message });
+    (insuranceRecords || []).forEach(item => {
+      // Filter by user if citizen role
+      if (role === 'user' && item.vehicles?.owners?.user_id?.toString() !== userId.toString()) return;
 
-    insuranceRecords.forEach(item => {
       const daysRemaining = calculateDaysRemaining(item.expiry_date);
       const isExpired = daysRemaining < 0;
       
@@ -39,7 +40,7 @@ export const getAlerts = (req, res) => {
         type: isExpired ? 'error' : 'warning',
         priority: isExpired ? 'High' : 'Medium',
         title: isExpired ? 'Insurance Expired' : 'Insurance Expiring Soon',
-        description: `Policy ${item.policy_number} for ${item.manufacturer} ${item.model_name} ${isExpired ? 'expired' : 'expires'} on ${item.expiry_date}.`,
+        description: `Policy ${item.policy_number} for ${item.vehicles?.manufacturer} ${item.vehicles?.model_name} ${isExpired ? 'expired' : 'expires'} on ${item.expiry_date}.`,
         category: 'Insurance',
         alertType: 'Insurance',
         daysRemaining: daysRemaining,
@@ -47,67 +48,64 @@ export const getAlerts = (req, res) => {
       });
     });
 
-    const finishAlerts = () => {
-      let licenseQuery = `
-        SELECT l.*, o.full_name 
-        FROM driving_licenses l
-        JOIN owners o ON l.owner_id = o.owner_id
-        WHERE l.expiry_date <= ?
-      `;
-      let licenseParams = [nextMonth];
-
-      if (role === 'user') {
-        licenseQuery += " AND o.user_id = ?";
-        licenseParams.push(userId);
-      }
-
-      db.all(licenseQuery, licenseParams, (err, licenses) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        licenses.forEach(lic => {
-          const daysRemaining = calculateDaysRemaining(lic.expiry_date);
-          const isExpired = daysRemaining < 0;
-          
-          alerts.push({
-            id: `lic-${lic.license_id}`,
-            type: isExpired ? 'error' : 'warning',
-            priority: isExpired ? 'High' : 'Medium',
-            title: isExpired ? 'License Expired' : 'License Renewal Due',
-            description: `${lic.full_name}'s license (${lic.license_number}) ${isExpired ? 'expired' : 'expires'} on ${lic.expiry_date}.`,
-            category: 'License',
-            alertType: 'License',
-            daysRemaining: daysRemaining,
-            action: 'Apply for License Renewal'
-          });
-        });
-
-        res.json(alerts);
-      });
-    };
-
-    // 2. Check for Pending Registrations (Admin Only)
+    // 2. Check Pending Registrations (Admin only)
     if (role === 'admin') {
-      const regQuery = "SELECT COUNT(*) as count FROM registrations WHERE status = 'Pending'";
-      db.get(regQuery, [], (err, pending) => {
-        if (err) return res.status(500).json({ error: err.message });
+      const { count, error: regError } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
 
-        if (pending.count > 0) {
-          alerts.push({
-            id: 'reg-pending',
-            type: 'warning',
-            priority: 'Medium',
-            title: 'Pending Approvals',
-            description: `There are ${pending.count} registration applications awaiting review.`,
-            category: 'Registration',
-            alertType: 'Registration',
-            daysRemaining: 0,
-            action: 'Review pending applications'
-          });
-        }
-        finishAlerts();
-      });
-    } else {
-      finishAlerts();
+      if (regError) return res.status(500).json({ error: regError.message });
+
+      if (count > 0) {
+        alerts.push({
+          id: 'reg-pending',
+          type: 'warning',
+          priority: 'Medium',
+          title: 'Pending Approvals',
+          description: `There are ${count} registration applications awaiting review.`,
+          category: 'Registration',
+          alertType: 'Registration',
+          daysRemaining: 0,
+          action: 'Review pending applications'
+        });
+      }
     }
-  });
+
+    // 3. Check License Expiries
+    const { data: licenses, error: licError } = await supabase
+      .from('driving_licenses')
+      .select(`
+        *,
+        owners ( full_name, user_id )
+      `)
+      .lte('expiry_date', nextMonth);
+
+    if (licError) return res.status(500).json({ error: licError.message });
+
+    (licenses || []).forEach(lic => {
+      // Filter by user if citizen role
+      if (role === 'user' && lic.owners?.user_id?.toString() !== userId.toString()) return;
+
+      const daysRemaining = calculateDaysRemaining(lic.expiry_date);
+      const isExpired = daysRemaining < 0;
+      
+      alerts.push({
+        id: `lic-${lic.license_id}`,
+        type: isExpired ? 'error' : 'warning',
+        priority: isExpired ? 'High' : 'Medium',
+        title: isExpired ? 'License Expired' : 'License Renewal Due',
+        description: `${lic.owners?.full_name}'s license (${lic.license_number}) ${isExpired ? 'expired' : 'expires'} on ${lic.expiry_date}.`,
+        category: 'License',
+        alertType: 'License',
+        daysRemaining: daysRemaining,
+        action: 'Apply for License Renewal'
+      });
+    });
+
+    res.json(alerts);
+  } catch (err) {
+    console.error('Error fetching alerts:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
