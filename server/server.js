@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import db from './db/database.js';
 import ownerRoutes from './routes/ownerRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import registrationRoutes from './routes/registrationRoutes.js';
